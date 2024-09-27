@@ -3,29 +3,25 @@ package com.badlogic.bobClicker;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class Bob {
+public class Rock {
     float x;
     float y;
     int width;
     int height;
-    Sprite bobSprite;
     SpriteBatch batch;
+    int level = 1;
 
-    public Bob(int x, int y, int width, int height, Sprite bobSprite, SpriteBatch batch) {
+    public Rock(float x, float y, int width, int height, SpriteBatch batch){
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        this.bobSprite = bobSprite;
         this.batch = batch;
     }
 
-    public void update() {
-        bobSprite.setX(x);
-        bobSprite.setY(y);
-        }
+    public void update(){} // Any updates are done in Main.input();
 
-    public void draw() {
-        bobSprite.draw(batch);
+    public void draw(Sprite s){
+        s.draw(batch);
     }
 }
