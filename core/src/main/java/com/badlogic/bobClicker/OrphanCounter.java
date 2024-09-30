@@ -26,7 +26,7 @@ public class OrphanCounter {
         font.draw(batch, "Cost: " + cost, x, y);
     }
 
-    public void drawAmount(SpriteBatch batch){
+    public void drawAmount(SpriteBatch batch, int x, int y){
         font.setColor(Color.BLACK);
         font.draw(batch, "Amount of orphans: " + amountOfOrphans, x, y);
     }

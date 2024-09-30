@@ -9,19 +9,24 @@ public class Rock {
     int width;
     int height;
     SpriteBatch batch;
+    Sprite sprite;
     int level = 1;
 
-    public Rock(float x, float y, int width, int height, SpriteBatch batch){
+    public Rock(float x, float y, int width, int height, SpriteBatch batch, Sprite sprite){
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.batch = batch;
+        this.sprite = sprite;
     }
 
-    public void update(){} // Any updates are done in Main.input();
+    public void update(){
+        sprite.setX(x);
+        sprite.setY(y);
+    }
 
-    public void draw(Sprite s){
-        s.draw(batch);
+    public void draw(){
+        sprite.draw(batch);
     }
 }

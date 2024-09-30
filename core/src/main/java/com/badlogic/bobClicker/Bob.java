@@ -20,7 +20,7 @@ public class Bob {
         this.batch = batch;
     }
 
-    public void update() {
+    public void update(int x, int y) {
         bobSprite.setX(x);
         bobSprite.setY(y);
         }

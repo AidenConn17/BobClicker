@@ -38,12 +38,16 @@ public class Main extends ApplicationAdapter {
     Texture upgRockTexture;
     Texture buyOrphanTexture;
     Texture orphanTexture;
+    Texture shopTexture;
+    Texture exitTexture;
 
     Sprite bobSprite;
     Sprite rockSprite;
     Sprite upgRockSprite;
     Sprite buyOrphanSprite;
     Sprite orphanSprite;
+    Sprite shopSprite;
+    Sprite exitSprite;
 
     FitViewport viewport;
 
@@ -52,10 +56,12 @@ public class Main extends ApplicationAdapter {
     MoneyCounter moneyCounter;
     CostCounter costCounter;
     OrphanCounter orphanCounter;
+    Orphan orphan;
 
     Rectangle upgRect;
     Rectangle rockRect;
     Rectangle buyOrphanRect;
+    Rectangle exitShopRect;
 
     int rockLevel = 1;
     int money = 0;
@@ -65,6 +71,7 @@ public class Main extends ApplicationAdapter {
     boolean rockIsMaxLevel = false;
     int framesPassed = 0;
     int moneyPerSecond = 0;
+    int screen = 0;
 
     @Override
     public void create() {
@@ -79,22 +86,35 @@ public class Main extends ApplicationAdapter {
         upgRockTexture = new Texture("upgRockButton.png");
         buyOrphanTexture = new Texture("mpsButton.png");
         orphanTexture = new Texture("britishOrphan.png");
+        shopTexture = new Texture("shopButton.png");
+        exitTexture = new Texture("exitButton.png");
 
         bobSprite = new Sprite(bobTexture);
         rockSprite = new Sprite(rockTexture1);
         upgRockSprite = new Sprite(upgRockTexture);
         buyOrphanSprite = new Sprite(buyOrphanTexture);
         orphanSprite = new Sprite(orphanTexture);
+        shopSprite = new Sprite(shopTexture);
+        exitSprite = new Sprite(exitTexture);
 
         rockSprite.setSize(50, 50);
         bobSprite.setSize(100, 100);
         upgRockSprite.setSize(200, 100);
         buyOrphanSprite.setSize(200, 100);
+        orphanSprite.setSize(100, 100);
+        shopSprite.setSize(200, 100);
+        exitSprite.setSize(200, 100);
 
         upgRockSprite.setX(600);
         upgRockSprite.setY(300);
         buyOrphanSprite.setX(600);
         buyOrphanSprite.setY(150);
+        orphanSprite.setX(0);
+        orphanSprite.setY(0);
+        shopSprite.setX(600);
+        shopSprite.setY(0);
+        exitSprite.setX(600);
+        exitSprite.setY(0);
 
         viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         generator = new FreeTypeFontGenerator(Gdx.files.internal("MintsodaLimeGreen13X16Regular-4n30l.ttf"));
@@ -114,13 +134,15 @@ public class Main extends ApplicationAdapter {
 
         moneyCounter = new MoneyCounter(moneyFont, 0, 400);
         costCounter = new CostCounter(costFont, 600, 290);
-        orphanCounter = new OrphanCounter(orphanFont, 50, 50);
-        bob = new Bob(50, -25, 100, 100, bobSprite, batch);
-        rock = new Rock(0, 0, 50, 50, batch);
+        orphanCounter = new OrphanCounter(orphanFont, 600, 140);
+        bob = new Bob(150, -25, 100, 100, bobSprite, batch);
+        rock = new Rock(100, 0, 50, 50, batch, rockSprite);
+        orphan = new Orphan(orphanSprite);
 
         upgRect = new Rectangle(600, 300, 200, 100);
         rockRect = new Rectangle(0, 0, 50, 50);
         buyOrphanRect = new Rectangle(600, 150, 200, 100);
+        exitShopRect = new Rectangle(600, 0, 200, 100);
     }
 
     @Override
@@ -150,75 +172,101 @@ public class Main extends ApplicationAdapter {
     }
 
     private void draw() {
-        ScreenUtils.clear(Color.WHITE);
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
-        bob.draw();
-        rockSprite.draw(batch);
-        upgRockSprite.draw(batch);
-        buyOrphanSprite.draw(batch);
-        costCounter.draw(batch);
+        ScreenUtils.clear(Color.WHITE);
         moneyCounter.draw(batch);
+        orphanCounter.drawAmount(batch, 0, 350);
+        if (screen == 0) { // Main screen
+            bob.draw();
+            if (amountOfOrphans != 0)
+                orphanSprite.draw(batch);
+            rockSprite.draw(batch);
+            shopSprite.draw(batch);
+        } else if (screen == 1) { // Shop screen
+            upgRockSprite.draw(batch);
+            buyOrphanSprite.draw(batch);
+            costCounter.draw(batch);
+            orphanCounter.drawCost(batch);
+            exitSprite.draw(batch);
+        }
         batch.end();
     }
 
     private void logic() {
-        bob.update();
         rock.update();
         moneyCounter.update(money);
         costCounter.update(upgCost, rockIsMaxLevel);
-
+        orphanCounter.update(orphanCost, amountOfOrphans);
+        orphan.update(amountOfOrphans);
         framesPassed++;
 
         if (framesPassed >= Gdx.graphics.getFramesPerSecond()) {
             money += moneyPerSecond;
+            bob.update(150, -10);
+            orphan.update(0, -20);
             framesPassed = 0;
+        } else if (framesPassed >= Gdx.graphics.getFramesPerSecond() / 2) {
+            bob.update(150, -20);
+            orphan.update(0, -10);
         }
     }
 
     private void input() {
         Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-        if (Gdx.input.justTouched() && upgRect.contains(touch)) {
-            if (rockLevel == 1 && money >= upgCost) {
-                rockSprite.setTexture(rockTexture2);
-                rockLevel++;
-                money -= upgCost;
-                upgCost = 100;
-            } else if (rockLevel == 2 && money >= upgCost) {
-                rockSprite.setTexture(rockTexture3);
-                rockLevel++;
-                money -= upgCost;
-                upgCost = 1000;
-            } else if (rockLevel == 3 && money >= upgCost) {
-                rockSprite.setTexture(rockTexture4);
-                rockLevel++;
-                money -= upgCost;
-                upgCost = 5000;
-            } else if (rockLevel == 4 && money >= upgCost) {
-                rockSprite.setTexture(rockTexture5);
-                rockLevel++;
-                money -= upgCost;
-                rockIsMaxLevel = true;
+        if (screen == 0) { // Game screen
+            if (Gdx.input.justTouched() && !upgRect.contains(touch) && !buyOrphanRect.contains(touch)
+                    && !exitShopRect.contains(touch)) {
+                if (rockLevel == 1) {
+                    money += 1;
+                } else if (rockLevel == 2) {
+                    money += 5;
+                } else if (rockLevel == 3) {
+                    money += 20;
+                } else if (rockLevel == 4) {
+                    money += 50;
+                } else {
+                    money += 200;
+                }
+            }
+            if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
+                screen = 1;
+            }
+        } else if (screen == 1) {// Shop screen
+            if (Gdx.input.justTouched() && upgRect.contains(touch)) {
+                if (rockLevel == 1 && money >= upgCost) {
+                    rockSprite.setTexture(rockTexture2);
+                    rockLevel++;
+                    money -= upgCost;
+                    upgCost = 100;
+                } else if (rockLevel == 2 && money >= upgCost) {
+                    rockSprite.setTexture(rockTexture3);
+                    rockLevel++;
+                    money -= upgCost;
+                    upgCost = 1000;
+                } else if (rockLevel == 3 && money >= upgCost) {
+                    rockSprite.setTexture(rockTexture4);
+                    rockLevel++;
+                    money -= upgCost;
+                    upgCost = 5000;
+                } else if (rockLevel == 4 && money >= upgCost) {
+                    rockSprite.setTexture(rockTexture5);
+                    rockLevel++;
+                    money -= upgCost;
+                    rockIsMaxLevel = true;
+                }
+            }
+
+            if (Gdx.input.justTouched() && buyOrphanRect.contains(touch) && money >= orphanCost) {
+                moneyPerSecond += 1;
+                money -= orphanCost;
+                orphanCost = (int) (orphanCost * 1.2);
+                amountOfOrphans++;
+            }
+
+            if (Gdx.input.justTouched() && exitShopRect.contains(touch)){
+                screen = 0;
             }
         }
-
-        if (Gdx.input.justTouched() && rockRect.contains(touch)) {
-            if (rockLevel == 1) {
-                money += 1;
-            } else if (rockLevel == 2) {
-                money += 5;
-            } else if (rockLevel == 3) {
-                money += 20;
-            } else if (rockLevel == 4) {
-                money += 50;
-            } else {
-                money += 200;
-            }
-        }
-
-        if(Gdx.input.justTouched() && buyOrphanRect.contains(touch)){
-            moneyPerSecond += 1;
-        }
-
     }
 }
