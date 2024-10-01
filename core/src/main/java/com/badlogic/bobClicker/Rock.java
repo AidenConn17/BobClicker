@@ -6,17 +6,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class Rock {
     float x;
     float y;
-    int width;
-    int height;
     SpriteBatch batch;
     Sprite sprite;
     int level = 1;
 
-    public Rock(float x, float y, int width, int height, SpriteBatch batch, Sprite sprite){
+    public Rock(float x, float y, SpriteBatch batch, Sprite sprite){
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
+
         this.batch = batch;
         this.sprite = sprite;
     }
