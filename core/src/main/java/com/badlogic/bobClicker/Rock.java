@@ -16,12 +16,11 @@ public class Rock {
 
         this.batch = batch;
         this.sprite = sprite;
+        this.sprite.setX(this.x);
+        this.sprite.setY(this.y);
     }
 
-    public void update(){
-        sprite.setX(x);
-        sprite.setY(y);
-    }
+    public void update(){}
 
     public void draw(){
         sprite.draw(batch);
