@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -49,6 +50,11 @@ public class Main extends ApplicationAdapter {
     Texture exitTexture;
     Texture batmanTexture;
     Texture jimbobTexture;
+    Texture jimbobAngry1Texture;
+    Texture saveTexture;
+    Texture newGameTexture;
+    Texture loadTexture;
+    Texture titleTexture;
     // #endregion
 
     // #region Sprite declarations
@@ -60,6 +66,10 @@ public class Main extends ApplicationAdapter {
     Sprite shopSprite;
     Sprite exitSprite;
     Sprite jimbobSprite;
+    Sprite saveSprite;
+    Sprite newGameSprite;
+    Sprite loadSprite;
+    Sprite titleSprite;
     // #endregion
 
     FitViewport viewport;
@@ -87,6 +97,9 @@ public class Main extends ApplicationAdapter {
     Rectangle buyOrphanRect;
     Rectangle exitShopRect;
     Rectangle jimbobRect;
+    Rectangle saveRect;
+    Rectangle newGameRect;
+    Rectangle loadRect;
     // #endregion
 
     // #region Primitive variables
@@ -98,11 +111,14 @@ public class Main extends ApplicationAdapter {
     boolean rockIsMaxLevel = false;
     boolean tutorialActive = true;
     int framesPassed = 0;
-    int moneyPerSecond = 0;
-    int screen = 0;
+    int moneyPerSecond = amountOfOrphans;
+    int screen = 2;
     int jimbobTemp = 0;
 
     // #endregion
+
+    Preferences prefs; // For saving
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -121,6 +137,11 @@ public class Main extends ApplicationAdapter {
         exitTexture = new Texture("exitButton.png");
         batmanTexture = new Texture("batman.png");
         jimbobTexture = new Texture("jimbob.png");
+        jimbobAngry1Texture = new Texture("jimbobAngry1.png");
+        saveTexture = new Texture("saveButton.png");
+        newGameTexture = new Texture("newGameButton.png");
+        loadTexture = new Texture("loadButton.png");
+        titleTexture = new Texture("TItle.png");
         // #endregion
 
         // #region Sprite initialization
@@ -132,18 +153,28 @@ public class Main extends ApplicationAdapter {
         shopSprite = new Sprite(shopTexture);
         exitSprite = new Sprite(exitTexture);
         jimbobSprite = new Sprite(jimbobTexture);
+        saveSprite = new Sprite(saveTexture);
+        newGameSprite = new Sprite(newGameTexture);
+        loadSprite = new Sprite(loadTexture);
+        titleSprite = new Sprite(titleTexture);
         // #endregion
 
         // #region Sprite values
+        // Size
         rockSprite.setSize(100, 50);
         bobSprite.setSize(200, 200);
         upgRockSprite.setSize(200, 100);
         buyOrphanSprite.setSize(200, 100);
-        orphanSprite.setSize(50, 100);
+        orphanSprite.setScale(1f);
         shopSprite.setSize(200, 100);
         exitSprite.setSize(200, 100);
         jimbobSprite.setSize(200, 150);
+        saveSprite.setSize(100, 50);
+        newGameSprite.setScale(1f);
+        loadSprite.setScale(1f);
+        titleSprite.setScale(1f);
 
+        // Position
         upgRockSprite.setX(300);
         upgRockSprite.setY(300);
         buyOrphanSprite.setX(600);
@@ -156,6 +187,13 @@ public class Main extends ApplicationAdapter {
         exitSprite.setY(0);
         jimbobSprite.setX(250);
         jimbobSprite.setY(0);
+        saveSprite.setX(0);
+        saveSprite.setY(275);
+        newGameSprite.setX(150);
+        newGameSprite.setY(150);
+        loadSprite.setX(Gdx.graphics.getWidth() - 350);
+        loadSprite.setY(150);
+        titleSprite.setCenter(Gdx.graphics.getWidth() / 2, 300);
         // #endregion
 
         viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -196,6 +234,14 @@ public class Main extends ApplicationAdapter {
         buyOrphanRect = new Rectangle(600, 300, 200, 100);
         exitShopRect = new Rectangle(600, 0, 200, 100);
         jimbobRect = new Rectangle(250, 0, 200, 150);
+        saveRect = new Rectangle(0, 275, 100, 50);
+        newGameRect = new Rectangle(150, 150, 200, 100);
+        loadRect = new Rectangle(Gdx.graphics.getWidth() - 350, 150, 200, 100);
+        // #endregion
+
+        prefs = Gdx.app.getPreferences("bobSave");
+
+        // #region Save loading
         // #endregion
     }
 
@@ -230,8 +276,15 @@ public class Main extends ApplicationAdapter {
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
         ScreenUtils.clear(Color.WHITE);
-        moneyCounter.draw(batch);
-        orphanCounter.drawAmount(batch, 0, 350);
+        if (screen == 0 || screen == 1) { // Draw if not on open screen
+            moneyCounter.draw(batch);
+            orphanCounter.drawAmount(batch, 0, 350);
+            saveSprite.draw(batch);
+        } else { // Draw newGame and load button
+            newGameSprite.draw(batch);
+            loadSprite.draw(batch);
+            titleSprite.draw(batch);
+        }
         if (screen == 0) { // Main screen
 
             bob.draw();
@@ -293,7 +346,10 @@ public class Main extends ApplicationAdapter {
             if (money < jimbobTemp) {
                 generalText.draw(batch);
             }
+        } else if (screen == 2) {
+
         }
+
         batch.end();
     }
 
@@ -308,20 +364,47 @@ public class Main extends ApplicationAdapter {
         if (framesPassed >= Gdx.graphics.getFramesPerSecond()) {
             money += moneyPerSecond;
             bob.update(325, -40);
-            orphan.update((int) (rockSprite.getX() + rockSprite.getWidth() / 4), 50);
+            orphan.update((int) (rockSprite.getX() + rockSprite.getWidth() / 4), 55);
             framesPassed = 0;
         } else if (framesPassed >= Gdx.graphics.getFramesPerSecond() / 2) {
             bob.update(325, -30);
-            orphan.update((int) (rockSprite.getX() + rockSprite.getWidth() / 4), 40);
+            orphan.update((int) (rockSprite.getX() + rockSprite.getWidth() / 4), 45);
+        }
+        if (rockLevel == 1) {
+            rockSprite.setTexture(rockTexture1);
+        } else if (rockLevel == 2) {
+            rockSprite.setTexture(rockTexture2);
+        } else if (rockLevel == 3) {
+            rockSprite.setTexture(rockTexture3);
+        } else if (rockLevel == 4) {
+            rockSprite.setTexture(rockTexture4);
+        } else if (rockLevel == 5) {
+            rockSprite.setTexture(rockTexture5);
+            rockIsMaxLevel = true;
         }
     }
 
     private void input() {
         // Handles logic reliant on user input
         Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+
+        // Save detection
+        if (Gdx.input.justTouched() && saveRect.contains(touch)) {
+            prefs.putInteger("money", money);
+            prefs.putInteger("amountOfOrphans", amountOfOrphans);
+            prefs.putInteger("mps", moneyPerSecond);
+            prefs.putBoolean("tutorialOn?", tutorialActive);
+            prefs.putInteger("rockLevel", rockLevel);
+            prefs.putBoolean("rockMax", rockIsMaxLevel);
+            prefs.putInteger("rockCost", upgCost);
+            prefs.putInteger("mpsCost", orphanCost);
+
+            prefs.flush();
+        }
+
         if (screen == 0) { // Game screen
-            //Gives user money based on the level of the rock
-            //when the rock is clicked
+            // Gives user money based on the level of the rock
+            // when the rock is clicked
             if (Gdx.input.justTouched() && rockRect.contains(touch)) {
                 if (rockLevel == 1) {
                     money += 1;
@@ -335,12 +418,15 @@ public class Main extends ApplicationAdapter {
                     money += 200;
                 }
             }
+
+            //If the shop button is clicked, set screen to shop
             if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
                 screen = 1;
             }
+            
         } else if (screen == 1) {// Shop screen
-            //Sets the rock to the next level when the user
-            //clicks the upgrade button and can afford to
+            // Sets the rock to the next level when the user
+            // clicks the upgrade button and can afford to
             if (Gdx.input.justTouched() && upgRect.contains(touch)) {
                 if (rockLevel == 1 && money >= upgCost) {
                     rockSprite.setTexture(rockTexture2);
@@ -365,15 +451,15 @@ public class Main extends ApplicationAdapter {
                 }
             }
 
-            //Adds an orphan when the buyOrphan button is clicked and user has enough money
+            // Adds an orphan when the buyOrphan button is clicked and user has enough money
             if (Gdx.input.justTouched() && buyOrphanRect.contains(touch) && money >= orphanCost) {
                 moneyPerSecond += 1;
                 money -= orphanCost;
                 orphanCost = (int) (orphanCost * 1.2);
                 amountOfOrphans++;
             }
-            
-            //Joke ha ha dw about it
+
+            // Joke ha ha dw about it
             if (money >= 100000000) {
                 orphanSprite.setTexture(batmanTexture);
             }
@@ -388,6 +474,38 @@ public class Main extends ApplicationAdapter {
                 jimbobTemp = money + moneyPerSecond * 3;
                 // Increment bound by 1 for every new quote added to jimbobQuotes
                 generalText.update(jimbobQuotes[random.nextInt(5)]);
+            }
+        } else if (screen == 2) {
+            if(Gdx.input.justTouched() && newGameRect.contains(touch)){
+                //Fill the save file with zeroes
+                prefs.putInteger("money", 0);
+                prefs.putInteger("amountOfOrphans", 0);
+                prefs.putInteger("mps", 0);
+                prefs.putBoolean("tutorialOn?", true);
+                prefs.putInteger("rockLevel", 1);
+                prefs.putBoolean("rockMax", false);
+                prefs.putInteger("rockCost", 10);
+                prefs.putInteger("mpsCost", 100);
+
+                prefs.flush();
+                
+                //Set to main screen
+                screen = 0;
+            }
+            
+            if (Gdx.input.justTouched() && loadRect.contains(touch)){
+                //Load values from save file
+                money = prefs.getInteger("money", 0);
+                amountOfOrphans = prefs.getInteger("amountOfOrphans", 0);
+                moneyPerSecond = prefs.getInteger("mps", 0);
+                tutorialActive = prefs.getBoolean("tutorialOn?", true);
+                rockLevel = prefs.getInteger("rockLevel", 0);
+                rockIsMaxLevel = prefs.getBoolean("rockMax", false);
+                upgCost = prefs.getInteger("rockCost", 10);
+                orphanCost = prefs.getInteger("mpsCost", 100);
+                
+                //Set to main screen
+                screen = 0;
             }
         }
     }
