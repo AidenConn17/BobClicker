@@ -20,8 +20,7 @@ public class Rock {
         this.sprite.setY(this.y);
     }
 
-    public void update(){}
-
+    //Draws the rock
     public void draw(){
         sprite.draw(batch);
     }

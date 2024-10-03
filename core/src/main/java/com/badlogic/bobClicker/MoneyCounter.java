@@ -15,10 +15,12 @@ public class MoneyCounter {
         this.y = y;
     }
 
+    // Allows for change in the text
     public void update(Integer money){
         this.money = money.toString();
     }
 
+    // Writes the text
     public void draw(SpriteBatch batch){
         font.setColor(Color.BLACK);
         font.draw(batch, "Money: " + money, x, y);

@@ -16,11 +16,13 @@ public class CostCounter {
         this.y = y;
     }
 
+    // Allows for change in text
     public void update(Integer cost, boolean max) {
         this.cost = cost.toString();
         this.isMaxLevel = max;
     }
 
+    // Writes text on the screen, depending on whether max is true or false
     public void draw(SpriteBatch batch) {
         font.setColor(Color.BLACK);
         if (!isMaxLevel) {

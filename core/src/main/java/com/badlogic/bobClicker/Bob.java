@@ -20,11 +20,13 @@ public class Bob {
         this.batch = batch;
     }
 
+    //Allows for a change in x and y
     public void update(int x, int y) {
         bobSprite.setX(x);
         bobSprite.setY(y);
-        }
+    }
 
+    // Draws the sprite
     public void draw() {
         bobSprite.draw(batch);
     }

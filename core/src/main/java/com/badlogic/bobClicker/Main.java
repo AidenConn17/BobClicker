@@ -280,7 +280,7 @@ public class Main extends ApplicationAdapter {
             moneyCounter.draw(batch);
             orphanCounter.drawAmount(batch, 0, 350);
             saveSprite.draw(batch);
-        } else { // Draw newGame and load button
+        } else { // Draw newGame, title, and load button
             newGameSprite.draw(batch);
             loadSprite.draw(batch);
             titleSprite.draw(batch);
@@ -358,7 +358,6 @@ public class Main extends ApplicationAdapter {
         moneyCounter.update(money);
         costCounter.update(upgCost, rockIsMaxLevel);
         orphanCounter.update(orphanCost, amountOfOrphans);
-        orphan.update(amountOfOrphans);
         framesPassed++; // Used to check if a second has passed
 
         if (framesPassed >= Gdx.graphics.getFramesPerSecond()) {
@@ -423,7 +422,7 @@ public class Main extends ApplicationAdapter {
             if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
                 screen = 1;
             }
-            
+
         } else if (screen == 1) {// Shop screen
             // Sets the rock to the next level when the user
             // clicks the upgrade button and can afford to
