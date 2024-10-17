@@ -1,5 +1,6 @@
 package com.badlogic.bobClicker;
 
+// #region Imports
 import java.util.Random;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+// #endregion
 
 /**
  * {@link com.badlogic.gdx.ApplicationListener} implementation shared by all
@@ -74,9 +76,8 @@ public class Main extends ApplicationAdapter {
 
     FitViewport viewport;
 
-    // #region Class declarations
+    // #region Class/Class variable declarations
     Bob bob;
-    Rock rock;
     MoneyCounter moneyCounter;
     CostCounter costCounter;
     OrphanCounter orphanCounter;
@@ -89,6 +90,7 @@ public class Main extends ApplicationAdapter {
             "Lovely morning, wouldn't you say? \nWas there something you needed?",
             "I have a lot of money \nand you don't",
             "I am Jimbob, \nthe richest man on <PLANET>" };
+    String screen = "Menu";
     // #endregion
 
     // #region Rectangles for click detection
@@ -112,7 +114,7 @@ public class Main extends ApplicationAdapter {
     boolean tutorialActive = true;
     int framesPassed = 0;
     int moneyPerSecond = amountOfOrphans;
-    int screen = 2;
+
     int jimbobTemp = 0;
 
     // #endregion
@@ -120,6 +122,9 @@ public class Main extends ApplicationAdapter {
     Preferences prefs; // For saving
 
     @Override
+    /**
+     * Initializes all non-primitive variables, called on first frame
+     */
     public void create() {
         batch = new SpriteBatch();
 
@@ -194,6 +199,8 @@ public class Main extends ApplicationAdapter {
         loadSprite.setX(Gdx.graphics.getWidth() - 350);
         loadSprite.setY(150);
         titleSprite.setCenter(Gdx.graphics.getWidth() / 2, 300);
+        rockSprite.setX((Gdx.graphics.getWidth() / 2) + 50);
+        rockSprite.setY(0);
         // #endregion
 
         viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -222,8 +229,7 @@ public class Main extends ApplicationAdapter {
         orphanCounter = new OrphanCounter(orphanFont, 600, 290);
         tutorialText = new Tutorial(null, costFont, 300, 200);
         generalText = new GeneralText(generalFont, null, 150, 200);
-        bob = new Bob(150, -25, 100, 100, bobSprite, batch);
-        rock = new Rock((Gdx.graphics.getWidth() / 2) + 50, 0, batch, rockSprite);
+        bob = new Bob(150, -25, 100, 100, bobSprite);
         orphan = new Orphan(orphanSprite);
         random = new Random();
         // #endregion
@@ -241,134 +247,151 @@ public class Main extends ApplicationAdapter {
 
         prefs = Gdx.app.getPreferences("bobSave");
 
-        // #region Save loading
-        // #endregion
     }
 
     @Override
-    public void render() { // Game loop, runs every frame
+    /**
+     * Runs every frame, calls 3 basic methods rather than run everything in here
+     */
+    public void render() {
         input();
         logic();
         draw();
     }
 
     @Override
-    public void dispose() {
-        batch.dispose();
-        bobTexture.dispose();
-        rockTexture1.dispose();
-        rockTexture2.dispose();
-        rockTexture3.dispose();
-        rockTexture4.dispose();
-        rockTexture5.dispose();
-        upgRockTexture.dispose();
-        buyOrphanTexture.dispose();
-        orphanTexture.dispose();
-    }
-
-    @Override
+    /**
+     * Resizes the viewport to fit the specified dimensions
+     * 
+     * @param width  screen width
+     * @param height screen height
+     */
     public void resize(int width, int height) {
         viewport.update(width, height, true);
     }
 
-    private void draw() { // Draws sprites and text in the game window
+    /**
+     * Used to draw sprites
+     */
+    private void draw() {
         // Things that are done/drawn no matter the screen
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
         ScreenUtils.clear(Color.WHITE);
-        if (screen == 0 || screen == 1) { // Draw if not on open screen
+
+        // Draw these values if not on menu screen
+        if (!screen.equals("Menu")) {
             moneyCounter.draw(batch);
             orphanCounter.drawAmount(batch, 0, 350);
             saveSprite.draw(batch);
-        } else { // Draw newGame, title, and load button
-            newGameSprite.draw(batch);
-            loadSprite.draw(batch);
-            titleSprite.draw(batch);
         }
-        if (screen == 0) { // Main screen
 
-            bob.draw();
+        switch (screen) {
+            // Menu screen, opened on startup
+            case "Menu":
+                // Draw new game button, load button and title
+                newGameSprite.draw(batch);
+                loadSprite.draw(batch);
+                titleSprite.draw(batch);
+                break;
 
-            // #region Tutorial
-            if (tutorialActive) {
-                if (money <= 9 && rockLevel == 1) {
-                    tutorialText.update("Click this rock to make money!");
-                    tutorialText.draw(batch);
-                }
-                if (money >= 10 && rockLevel == 1) {
-                    tutorialText.update("Click the shop button \nto purchase upgrades");
-                    tutorialText.update(550, 150);
-                    tutorialText.draw(batch);
-                }
-                if (money <= 99 && rockLevel == 2 && amountOfOrphans == 0) {
-                    tutorialText.update("Click until you have 100 money,\nthen go back to the shop");
-                    tutorialText.update(250, 250);
-                    tutorialText.draw(batch);
-                }
-                if (rockLevel == 2 && amountOfOrphans >= 1) {
-                    if (money < 5) {
-                        tutorialText.update("That's all there is to it!");
+            // Main Screen
+            case "Main":
+                // Draw Bob
+                bob.draw(batch);
+
+                // #region Tutorial
+                if (tutorialActive) {
+                    if (money <= 9 && rockLevel == 1) {
+                        tutorialText.update("Click this rock to make money!");
+                        tutorialText.draw(batch);
+                    }
+                    if (money >= 10 && rockLevel == 1) {
+                        tutorialText.update("Click the shop button \nto purchase upgrades");
+                        tutorialText.update(550, 150);
+                        tutorialText.draw(batch);
+                    }
+                    if (money <= 99 && rockLevel == 2 && amountOfOrphans == 0) {
+                        tutorialText.update("Click until you have 100 money,\nthen go back to the shop");
                         tutorialText.update(250, 250);
                         tutorialText.draw(batch);
-                    } else {
-                        tutorialActive = false;
                     }
-                }
-            } // #endregion
+                    if (rockLevel == 2 && amountOfOrphans >= 1) {
+                        if (money < 5) {
+                            tutorialText.update("That's all there is to it!");
+                            tutorialText.update(250, 250);
+                            tutorialText.draw(batch);
+                        } else {
+                            tutorialActive = false;
+                        }
+                    }
+                } // #endregion
 
-            // Draws the orphan sprite if there's at least one orphan
-            if (amountOfOrphans != 0)
-                orphanSprite.draw(batch);
-            rockSprite.draw(batch);
-            shopSprite.draw(batch);
-        } else if (screen == 1) { // Shop screen
-            // #region Tutorial
-            if (tutorialActive) {
-                if (money >= 10 && rockLevel == 1) {
-                    tutorialText.update("You can afford \nto upgrade \nthe rock!");
-                    tutorialText.update(300, 250);
-                    tutorialText.draw(batch);
-                }
-                if (money >= 100 && rockLevel == 2 && amountOfOrphans == 0) {
-                    tutorialText.update("\"adopt\" an orphan to \nmake passive income");
-                    tutorialText.update(300, 200);
-                    tutorialText.draw(batch);
-                }
-            } // #endregion
+                // Draws the orphan sprite if there's at least one orphan
+                if (amountOfOrphans != 0)
+                    orphanSprite.draw(batch);
+                rockSprite.draw(batch);
+                shopSprite.draw(batch);
+                break;
 
-            // Draws cost counters and buttons
-            upgRockSprite.draw(batch);
-            buyOrphanSprite.draw(batch);
-            costCounter.draw(batch);
-            orphanCounter.drawCost(batch);
-            exitSprite.draw(batch);
-            jimbobSprite.draw(batch);
-            if (money < jimbobTemp) {
-                generalText.draw(batch);
-            }
-        } else if (screen == 2) {
+            // Shop screen
+            case "Shop":
+                // #region Tutorial
+                if (tutorialActive) {
+                    if (money >= 10 && rockLevel == 1) {
+                        tutorialText.update("You can afford \nto upgrade \nthe rock!");
+                        tutorialText.update(300, 250);
+                        tutorialText.draw(batch);
+                    }
+                    if (money >= 100 && rockLevel == 2 && amountOfOrphans == 0) {
+                        tutorialText.update("\"adopt\" an orphan to \nmake passive income");
+                        tutorialText.update(300, 200);
+                        tutorialText.draw(batch);
+                    }
+                } // #endregion
 
+                // Draws cost counters and buttons
+                upgRockSprite.draw(batch);
+                buyOrphanSprite.draw(batch);
+                costCounter.draw(batch);
+                orphanCounter.drawCost(batch);
+                exitSprite.draw(batch);
+                jimbobSprite.draw(batch);
+
+                // Draws jimbob quotes for 3 seconds, jimbobTemp is set in input()
+                if (money < jimbobTemp) {
+                    generalText.draw(batch);
+                }
+                break;
         }
-
+        // End the SpriteBatch
         batch.end();
     }
 
-    private void logic() { // Performs logic not related to user input
-        // Updates counters the framesPassed variable
+    /*
+     * Handles logic not related to input
+     */
+    private void logic() {
+
+        // Updates counters and the framesPassed variable
         moneyCounter.update(money);
         costCounter.update(upgCost, rockIsMaxLevel);
         orphanCounter.update(orphanCost, amountOfOrphans);
         framesPassed++; // Used to check if a second has passed
 
+        // Runs once a second
         if (framesPassed >= Gdx.graphics.getFramesPerSecond()) {
             money += moneyPerSecond;
             bob.update(325, -40);
             orphan.update((int) (rockSprite.getX() + rockSprite.getWidth() / 4), 55);
             framesPassed = 0;
-        } else if (framesPassed >= Gdx.graphics.getFramesPerSecond() / 2) {
+        } else if (framesPassed >= Gdx.graphics.getFramesPerSecond() / 2) { // Runs every half second
             bob.update(325, -30);
             orphan.update((int) (rockSprite.getX() + rockSprite.getWidth() / 4), 45);
         }
+
+        // Makes sure the rock sprite is set to the correct
+        // texture when the game is loaded
         if (rockLevel == 1) {
             rockSprite.setTexture(rockTexture1);
         } else if (rockLevel == 2) {
@@ -377,18 +400,22 @@ public class Main extends ApplicationAdapter {
             rockSprite.setTexture(rockTexture3);
         } else if (rockLevel == 4) {
             rockSprite.setTexture(rockTexture4);
-        } else if (rockLevel == 5) {
+        } else {
             rockSprite.setTexture(rockTexture5);
-            rockIsMaxLevel = true;
         }
     }
 
+    /**
+     * Handles logic related to user input
+     */
     private void input() {
-        // Handles logic reliant on user input
+        // Contains the cursor position
         Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
 
-        // Save detection
+        // Save detection - always detectable no matter the screen
         if (Gdx.input.justTouched() && saveRect.contains(touch)) {
+
+            // Saves values
             prefs.putInteger("money", money);
             prefs.putInteger("amountOfOrphans", amountOfOrphans);
             prefs.putInteger("mps", moneyPerSecond);
@@ -398,114 +425,131 @@ public class Main extends ApplicationAdapter {
             prefs.putInteger("rockCost", upgCost);
             prefs.putInteger("mpsCost", orphanCost);
 
+            // Makes sure values are put on the prefs file
             prefs.flush();
         }
 
-        if (screen == 0) { // Game screen
-            // Gives user money based on the level of the rock
-            // when the rock is clicked
-            if (Gdx.input.justTouched() && rockRect.contains(touch)) {
-                if (rockLevel == 1) {
-                    money += 1;
-                } else if (rockLevel == 2) {
-                    money += 5;
-                } else if (rockLevel == 3) {
-                    money += 20;
-                } else if (rockLevel == 4) {
-                    money += 50;
-                } else {
-                    money += 200;
+        switch (screen) {
+            // Menu screen, opened on startup
+            case "Menu":
+                if (Gdx.input.justTouched() && newGameRect.contains(touch)) {
+                    // Fill the save file with default values
+                    prefs.putInteger("money", 0);
+                    prefs.putInteger("amountOfOrphans", 0);
+                    prefs.putInteger("mps", 0);
+                    prefs.putBoolean("tutorialOn?", true);
+                    prefs.putInteger("rockLevel", 1);
+                    prefs.putBoolean("rockMax", false);
+                    prefs.putInteger("rockCost", 10);
+                    prefs.putInteger("mpsCost", 100);
+
+                    // Makes sure the values are put into the prefs file
+                    prefs.flush();
+
+                    // Set to main screen
+                    screen = "Main";
                 }
-            }
 
-            //If the shop button is clicked, set screen to shop
-            if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
-                screen = 1;
-            }
+                if (Gdx.input.justTouched() && loadRect.contains(touch)) {
+                    // Load values from save file
+                    money = prefs.getInteger("money", 0);
+                    amountOfOrphans = prefs.getInteger("amountOfOrphans", 0);
+                    moneyPerSecond = prefs.getInteger("mps", 0);
+                    tutorialActive = prefs.getBoolean("tutorialOn?", true);
+                    rockLevel = prefs.getInteger("rockLevel", 0);
+                    rockIsMaxLevel = prefs.getBoolean("rockMax", false);
+                    upgCost = prefs.getInteger("rockCost", 10);
+                    orphanCost = prefs.getInteger("mpsCost", 100);
 
-        } else if (screen == 1) {// Shop screen
-            // Sets the rock to the next level when the user
-            // clicks the upgrade button and can afford to
-            if (Gdx.input.justTouched() && upgRect.contains(touch)) {
-                if (rockLevel == 1 && money >= upgCost) {
-                    rockSprite.setTexture(rockTexture2);
-                    rockLevel++;
-                    money -= upgCost;
-                    upgCost = 100;
-                } else if (rockLevel == 2 && money >= upgCost) {
-                    rockSprite.setTexture(rockTexture3);
-                    rockLevel++;
-                    money -= upgCost;
-                    upgCost = 1000;
-                } else if (rockLevel == 3 && money >= upgCost) {
-                    rockSprite.setTexture(rockTexture4);
-                    rockLevel++;
-                    money -= upgCost;
-                    upgCost = 5000;
-                } else if (rockLevel == 4 && money >= upgCost) {
-                    rockSprite.setTexture(rockTexture5);
-                    rockLevel++;
-                    money -= upgCost;
-                    rockIsMaxLevel = true;
+                    // Set to main screen
+                    screen = "Main";
                 }
-            }
+                break;
 
-            // Adds an orphan when the buyOrphan button is clicked and user has enough money
-            if (Gdx.input.justTouched() && buyOrphanRect.contains(touch) && money >= orphanCost) {
-                moneyPerSecond += 1;
-                money -= orphanCost;
-                orphanCost = (int) (orphanCost * 1.2);
-                amountOfOrphans++;
-            }
+            // Main screen
+            case "Main":
 
-            // Joke ha ha dw about it
-            if (money >= 100000000) {
-                orphanSprite.setTexture(batmanTexture);
-            }
+                // Gives user money based on the level of the rock
+                // when the rock is clicked
+                if (Gdx.input.justTouched() && rockRect.contains(touch)) {
+                    if (rockLevel == 1) {
+                        money += 1;
+                    } else if (rockLevel == 2) {
+                        money += 5;
+                    } else if (rockLevel == 3) {
+                        money += 20;
+                    } else if (rockLevel == 4) {
+                        money += 50;
+                    } else {
+                        money += 200;
+                    }
+                }
 
-            // Exits shop when the exit button is clicked
-            if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
-                screen = 0;
-            }
+                // If the shop button is clicked, set screen to shop
+                if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
+                    // Set to shop screen
+                    screen = "Shop";
+                }
+                break;
 
-            // When jimbob is clicked on, he says something for 5 seconds
-            if (Gdx.input.justTouched() && jimbobRect.contains(touch)) {
-                jimbobTemp = money + moneyPerSecond * 3;
-                // Increment bound by 1 for every new quote added to jimbobQuotes
-                generalText.update(jimbobQuotes[random.nextInt(5)]);
-            }
-        } else if (screen == 2) {
-            if(Gdx.input.justTouched() && newGameRect.contains(touch)){
-                //Fill the save file with zeroes
-                prefs.putInteger("money", 0);
-                prefs.putInteger("amountOfOrphans", 0);
-                prefs.putInteger("mps", 0);
-                prefs.putBoolean("tutorialOn?", true);
-                prefs.putInteger("rockLevel", 1);
-                prefs.putBoolean("rockMax", false);
-                prefs.putInteger("rockCost", 10);
-                prefs.putInteger("mpsCost", 100);
+            // Shop screen
+            case "Shop":
 
-                prefs.flush();
-                
-                //Set to main screen
-                screen = 0;
-            }
-            
-            if (Gdx.input.justTouched() && loadRect.contains(touch)){
-                //Load values from save file
-                money = prefs.getInteger("money", 0);
-                amountOfOrphans = prefs.getInteger("amountOfOrphans", 0);
-                moneyPerSecond = prefs.getInteger("mps", 0);
-                tutorialActive = prefs.getBoolean("tutorialOn?", true);
-                rockLevel = prefs.getInteger("rockLevel", 0);
-                rockIsMaxLevel = prefs.getBoolean("rockMax", false);
-                upgCost = prefs.getInteger("rockCost", 10);
-                orphanCost = prefs.getInteger("mpsCost", 100);
-                
-                //Set to main screen
-                screen = 0;
-            }
+                // Sets the rock to the next level when the user
+                // clicks the upgrade button and can afford to
+                if (Gdx.input.justTouched() && upgRect.contains(touch)) {
+                    if (rockLevel == 1 && money >= upgCost) {
+                        rockSprite.setTexture(rockTexture2);
+                        rockLevel++;
+                        money -= upgCost;
+                        upgCost = 100;
+                    } else if (rockLevel == 2 && money >= upgCost) {
+                        rockSprite.setTexture(rockTexture3);
+                        rockLevel++;
+                        money -= upgCost;
+                        upgCost = 1000;
+                    } else if (rockLevel == 3 && money >= upgCost) {
+                        rockSprite.setTexture(rockTexture4);
+                        rockLevel++;
+                        money -= upgCost;
+                        upgCost = 5000;
+                    } else if (rockLevel == 4 && money >= upgCost) {
+                        rockSprite.setTexture(rockTexture5);
+                        rockLevel++;
+                        money -= upgCost;
+                        rockIsMaxLevel = true;
+                    }
+                }
+
+                // Adds an orphan when the buyOrphan button is clicked and user has enough money
+                if (Gdx.input.justTouched() && buyOrphanRect.contains(touch) && money >= orphanCost) {
+                    moneyPerSecond += 1;
+                    money -= orphanCost;
+                    orphanCost = (int) (orphanCost * 1.2);
+                    amountOfOrphans++;
+                }
+
+                // TODO: Implement skins section
+                // Not implemented yet
+                if (money >= 100000000) {
+                    orphanSprite.setTexture(batmanTexture);
+                }
+
+                // Exits shop when the exit button is clicked
+                if (Gdx.input.justTouched() && exitShopRect.contains(touch)) {
+                    // Set to main screen
+                    screen = "Main";
+                }
+
+                // When jimbob is clicked on, he says something for 5 seconds
+                if (Gdx.input.justTouched() && jimbobRect.contains(touch)) {
+                    // Value to make sure quotes persist for 3 seconds
+                    jimbobTemp = money + moneyPerSecond * 3;
+
+                    // Increment bound by 1 for every new quote added to jimbobQuotes
+                    generalText.update(jimbobQuotes[random.nextInt(5)]);
+                }
+                break;
         }
     }
 }

@@ -9,27 +9,47 @@ public class Tutorial {
     BitmapFont font;
     int x, y;
 
-    public Tutorial(String text, BitmapFont font, int x, int y){
+    /**
+     * Creates a Tutorial object
+     * 
+     * @param text Stored text
+     * @param font The BitmapFOnt
+     * @param x    X position
+     * @param y    Y position
+     */
+    public Tutorial(String text, BitmapFont font, int x, int y) {
         this.text = text;
         this.font = font;
         this.x = x;
         this.y = y;
     }
 
-
-    // Allows for a change in text
-    public void update(String text){
+    /**
+     * Updates the stored text
+     * 
+     * @param text New text to store
+     */
+    public void update(String text) {
         this.text = text;
     }
 
-    // Allows for a change in position
-    public void update(int x, int y){
+    /**
+     * Updates x and y
+     * 
+     * @param x New x position
+     * @param y New y position
+     */
+    public void update(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    // Writes text at the stored position
-    public void draw(SpriteBatch batch){
+    /**
+     * Draws stored text at x and y
+     * 
+     * @param batch The SpriteBatch
+     */
+    public void draw(SpriteBatch batch) {
         font.setColor(Color.BLACK);
         font.draw(batch, text, x, y);
     }
